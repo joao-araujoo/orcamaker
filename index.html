@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orçamaker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Judson:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="shortcut icon" href="assets/calculator.png" type="image/x-icon">
+    <style>
+        /* Definindo variáveis de cor para o tema CLARO (padrão) */
+        :root {
+            --primary-bg: #F4F4F4;
+            --surface-bg: #FFFFFF;
+            --text-primary: #1F1F1F;
+            --text-secondary: #6B7280;
+            --accent-purple: #8B5CF6;
+            --accent-purple-light: #A78BFA;
+            --border-color: #E5E7EB;
+            --shadow-color: rgba(0, 0, 0, 0.05);
+            --icon-color: #9CA3AF;
+            --button-primary-bg: #1F1F1F;
+            --button-primary-text: #FFFFFF;
+            --card-light-bg: #F9FAFB;
+            --card-light-text: #4B5563;
+        }
+
+        /* Variáveis para o tema ESCURO (ativado pela classe .dark-theme) */
+        .dark-theme {
+            --primary-bg: #1A1A1A;
+            --surface-bg: #262626;
+            --text-primary: #E0E0E0;
+            --text-secondary: #A0A0A0;
+            --border-color: #4A4A4A;
+            --shadow-color: rgba(0, 0, 0, 0.2);
+            --icon-color: #A0A0A0;
+            --button-primary-bg: #8B5CF6;
+            --button-primary-text: #FFFFFF;
+            --card-light-bg: #374151;
+            --card-light-text: #D1D5DB;
+        }
+
+        /* Estilos globais para o corpo e o container principal */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+        
+        /* Estilo da fonte Judson para o título principal */
+        .font-judson {
+            font-family: 'Judson', serif;
+        }
+
+        /* Estilo da barra lateral */
+        .sidebar {
+            width: 280px;
+            background-color: var(--surface-bg);
+            padding: 2rem;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 50;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out, background-color 0.5s ease, border-color 0.5s ease;
+        }
+        .sidebar.active {
+            transform: translateX(0);
+        }
+        @media (min-width: 1024px) {
+            .sidebar {
+                transform: translateX(0);
+            }
+        }
+
+        /* Estilo do link da barra lateral */
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 12px;
+            color: var(--text-secondary);
+            background-color: transparent; /* Padrão para tema claro */
+            transition: all 0.3s ease;
+        }
+        .sidebar-link:hover {
+            background-color: var(--accent-purple);
+            color: #fff;
+        }
+        .sidebar-link.active {
+            background-color: #1F1F1F; /* Preto para link ativo no tema claro */
+            color: #fff;
+        }
+        .dark-theme .sidebar-link.active {
+            background-color: var(--accent-purple); /* Roxo para link ativo no tema escuro */
+        }
+        .sidebar-link i {
+            width: 24px;
+            margin-right: 1rem;
+        }
+
+        /* Botão para abrir o menu no celular */
+        .menu-toggle {
+            position: fixed;
+            top: 1.5rem;
+            left: 1.5rem;
+            z-index: 60;
+            background-color: var(--surface-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.75rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+        @media (min-width: 1024px) {
+            .menu-toggle {
+                display: none;
+            }
+        }
+        
+        /* Estilo do container de conteúdo principal */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            padding-left: 2rem;
+            transition: padding-left 0.3s ease;
+        }
+        @media (min-width: 1024px) {
+            .main-content {
+                padding-left: calc(280px + 2rem);
+            }
+        }
+
+        /* Estilo de entrada com ícones */
+        .input-container .input-group {
+            display: flex;
+            align-items: center;
+            background-color: var(--surface-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px var(--shadow-color), 0 2px 4px -1px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+        .input-container .input-group:focus-within {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 0 2px var(--accent-purple-light);
+        }
+        .input-container .input-group i {
+            padding: 1rem;
+            color: var(--icon-color);
+        }
+        .input-container input, .input-container textarea {
+            flex-grow: 1;
+            padding: 1rem;
+            border: none;
+            outline: none;
+            background-color: transparent;
+            color: var(--text-primary);
+        }
+        .input-container textarea {
+            min-height: 120px;
+        }
+        /* Alinhamento para o ícone do textarea */
+        .input-container .input-group.align-start {
+            align-items: flex-start;
+        }
+        .input-container .input-group.align-start i {
+            padding-top: 1.25rem;
+        }
+
+        /* Estilo do botão primário */
+        .btn-primary {
+            background-color: var(--button-primary-bg);
+            color: var(--button-primary-text);
+            padding: 1rem 2.5rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        /* Estilos para os cards de valor e prazo */
+        .quote-info-card {
+            background-color: var(--card-light-bg);
+            color: var(--card-light-text);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            transition: background-color 0.5s ease, border-color 0.5s ease;
+        }
+        .dark-theme .quote-info-card {
+            background-color: #374151;
+            color: #D1D5DB;
+        }
+        .quote-info-card .text-3xl {
+            color: var(--accent-purple);
+        }
+        
+        /* Estilo do card de histórico */
+        .history-card {
+            background-color: var(--surface-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px var(--shadow-color);
+        }
+        .history-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        
+        /* Estilos para as telas (páginas) */
+        .screen {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .screen.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Estilo do modal de carregamento */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: var(--surface-bg);
+            color: var(--text-primary);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+        .spinner {
+            border: 4px solid var(--border-color);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-top-color: var(--accent-purple);
+            animation: spin 1s ease infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Estilos para o skeleton loading */
+        .skeleton {
+            background-color: var(--border-color);
+            animation: pulse 1.5s infinite ease-in-out;
+            border-radius: 8px;
+        }
+        .dark-theme .skeleton {
+            background-color: #4A4A4A;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loadingModal" class="modal">
+        <div class="modal-content">
+            <div class="spinner"></div>
+            <p>Gerando seu orçamento...</p>
+        </div>
+    </div>
+    
+    <div class="absolute top-4 right-4 z-50 flex items-center gap-4 lg:hidden">
+        <button id="themeToggleBtn" class="w-10 h-10 rounded-full text-text-secondary transition-colors duration-300">
+            <i class="fas fa-moon theme-icon" id="themeIcon"></i>
+        </button>
+        <button id="menuToggleBtn" class="menu-toggle">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="mb-12 flex justify-between items-center">
+            <div>
+                <h1 class="font-judson text-3xl font-bold">Orçamaker</h1>
+                <p class="text-sm text-text-secondary">Gere orçamentos com IA</p>
+            </div>
+            <button id="themeToggleBtnDesktop" class="w-10 h-10 rounded-full text-text-secondary hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 hidden lg:block">
+                <i class="fas fa-moon theme-icon" id="themeIconDesktop"></i>
+            </button>
+            <button id="closeSidebarBtn" class="w-10 h-10 rounded-full text-text-secondary hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 lg:hidden">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <nav class="flex-1 space-y-2">
+            <a href="#" class="sidebar-link active" id="link-form">
+                <i class="fas fa-file-invoice-dollar"></i>
+                Gerar Orçamento
+            </a>
+            <a href="#" class="sidebar-link" id="link-history">
+                <i class="fas fa-history"></i>
+                Histórico
+            </a>
+        </nav>
+    </aside>
+
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black opacity-0 transition-opacity duration-300 pointer-events-none z-40"></div>
+
+    <main class="main-content">
+        <div id="formScreen" class="screen active">
+            <div class="w-full flex flex-col items-center bg-surface-bg p-8 md:p-12 rounded-3xl shadow-xl transition-all duration-500 ease-in-out transform">
+                <div class="w-full max-w-2xl">
+                    <h2 class="text-3xl font-bold mb-2">Crie um novo orçamento</h2>
+                    <p class="text-lg text-text-secondary mb-10">Preencha os dados e deixe a IA cuidar do resto.</p>
+                    <form id="quoteForm" class="space-y-6">
+                        <div class="input-container">
+                            <label for="companyName" class="text-sm font-semibold text-text-primary mb-2 block">Nome da empresa / cliente</label>
+                            <div class="input-group">
+                                <i class="fas fa-building"></i>
+                                <input type="text" id="companyName" name="nome_da_empresa_cliente" placeholder="Empresa do João" required>
+                            </div>
+                        </div>
+                        <div class="input-container">
+                            <label for="productService" class="text-sm font-semibold text-text-primary mb-2 block">Produto ou serviço desejado</label>
+                            <div class="input-group">
+                                <i class="fas fa-box"></i>
+                                <input type="text" id="productService" name="produto_ou_servico_desejado" placeholder="Landing Page" required>
+                            </div>
+                        </div>
+                        <div class="input-container">
+                            <label for="scope" class="text-sm font-semibold text-text-primary mb-2 block">Quantidade / escopo</label>
+                            <div class="input-group">
+                                <i class="fas fa-cube"></i>
+                                <input type="text" id="scope" name="quantidade_escopo" placeholder="123" required>
+                            </div>
+                        </div>
+                        <div class="input-container">
+                            <label for="observations" class="text-sm font-semibold text-text-primary mb-2 block">Observações adicionais</label>
+                            <div class="input-group align-start">
+                                <i class="fas fa-comment-dots"></i>
+                                <textarea id="observations" name="observations" placeholder="Gostaria de UX Premium..." required></textarea>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary w-full text-center">Gerar orçamento</button>
+                        <div id="errorMessage" class="text-red-500 text-center mt-4 hidden"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="quoteScreen" class="screen">
+            <div id="quoteContent" class="bg-surface-bg p-8 md:p-12 rounded-3xl shadow-xl transition-all duration-500 ease-in-out transform">
+                <!-- Conteúdo do orçamento ou skeleton loading será renderizado aqui -->
+            </div>
+        </div>
+
+        <div id="historyScreen" class="screen">
+            <div class="bg-surface-bg p-8 md:p-12 rounded-3xl shadow-xl">
+                <h2 class="text-3xl font-bold mb-2">Histórico de Orçamentos</h2>
+                <p class="text-lg text-text-secondary mb-8">Consulte o último orçamento gerado.</p>
+                
+                <div id="historyLoading" class="text-center text-text-secondary hidden">
+                    <div class="spinner mx-auto my-4"></div>
+                    <p>Carregando histórico...</p>
+                </div>
+
+                <div id="historyList" class="space-y-4">
+                    <p class="text-center text-text-secondary">Nenhum orçamento no histórico.</p>
+                </div>
+                <div id="history-message-box" class="mt-4 p-4 rounded-lg text-sm bg-gray-100 text-text-primary hidden"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+    // Importando a biblioteca jsPDF para exportação de PDF.
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    document.head.appendChild(script);
+
+    // Definindo as URLs dos seus webhooks do Make.com.
+    // NOTE: A URL de POST é usada para gerar o orçamento, a de GET para buscar o orçamento gerado.
+    const WEBHOOK_URL_POST = 'https://hook.us2.make.com/3r5laprv565u5immk4klnxjjc5dmsdnp';
+    const WEBHOOK_URL_GET = 'https://hook.us2.make.com/u8dq1lxkduaelph1ien7laotf27ukpfq';
+    
+    // Elementos da interface e navegação
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeIcon');
+    const themeToggleBtnDesktop = document.getElementById('themeToggleBtnDesktop');
+    const themeIconDesktop = document.getElementById('themeIconDesktop');
+    const menuToggleBtn = document.getElementById('menuToggleBtn');
+    const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    const formScreen = document.getElementById('formScreen');
+    const quoteScreen = document.getElementById('quoteScreen');
+    const historyScreen = document.getElementById('historyScreen');
+    const loadingModal = document.getElementById('loadingModal');
+    const quoteForm = document.getElementById('quoteForm');
+    const errorMessage = document.getElementById('errorMessage');
+    
+    const quoteContent = document.getElementById('quoteContent');
+    
+    const linkForm = document.getElementById('link-form');
+    const linkHistory = document.getElementById('link-history');
+    const historyList = document.getElementById('historyList');
+    const historyMessageBox = document.getElementById('history-message-box');
+    const historyLoading = document.getElementById('historyLoading');
+
+    // Função para mostrar o modal de carregamento
+    function showLoading() {
+        loadingModal.style.display = 'flex';
+    }
+
+    // Função para esconder o modal de carregamento
+    function hideLoading() {
+        loadingModal.style.display = 'none';
+    }
+
+    // Função para alternar entre as telas
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(screen => {
+            screen.classList.remove('active');
+        });
+        document.getElementById(screenId).classList.add('active');
+
+        // Atualiza o link ativo na barra lateral
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            link.classList.remove('active');
+        });
+        if (screenId === 'formScreen') {
+            linkForm.classList.add('active');
+        } else if (screenId === 'historyScreen') {
+            linkHistory.classList.add('active');
+        }
+
+        // Fecha a barra lateral no celular
+        if (window.innerWidth < 1024) {
+            closeSidebar();
+        }
+    }
+
+    // Função para exibir uma mensagem de erro
+    function showErrorMessage(message) {
+        errorMessage.textContent = message;
+        errorMessage.classList.remove('hidden');
+    }
+
+    // Função para esconder a mensagem de erro
+    function hideErrorMessage() {
+        errorMessage.textContent = '';
+        errorMessage.classList.add('hidden');
+    }
+
+    // Funções para controlar a barra lateral no celular
+    function openSidebar() {
+        sidebar.classList.add('active');
+        sidebarOverlay.classList.remove('pointer-events-none', 'opacity-0');
+        sidebarOverlay.classList.add('opacity-50');
+    }
+
+    function closeSidebar() {
+        sidebar.classList.remove('active');
+        sidebarOverlay.classList.remove('opacity-50');
+        sidebarOverlay.classList.add('pointer-events-none', 'opacity-0');
+    }
+
+    // Função que renderiza o skeleton de carregamento na tela de orçamento
+    function showQuoteSkeleton() {
+        quoteContent.innerHTML = `
+            <button class="mb-6 text-text-secondary hover:text-text-primary transition-colors duration-300" onclick="showScreen('formScreen'); document.getElementById('quoteForm').reset();">
+                <i class="fas fa-arrow-left mr-2"></i> Voltar
+            </button>
+            <h2 class="text-3xl font-bold mb-2 skeleton w-2/3 h-8"></h2>
+            <p class="text-lg text-text-secondary mb-8 skeleton w-1/2 h-6"></p>
+
+            <div class="flex justify-between items-center pb-4 border-b border-border-color mb-6">
+                <h3 class="text-xl font-semibold text-text-primary skeleton w-1/4 h-6"></h3>
+                <div class="text-sm text-text-secondary skeleton w-1/5 h-4"></div>
+            </div>
+            
+            <p class="text-lg text-text-primary leading-relaxed mb-8 skeleton h-20"></p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="quote-info-card skeleton h-24"></div>
+                <div class="quote-info-card skeleton h-24"></div>
+            </div>
+            
+            <div class="quote-info-card mb-8 skeleton h-24"></div>
+            
+            <div class="flex flex-col md:flex-row gap-4">
+                <button class="btn-primary flex-1 skeleton h-12"></button>
+                <button class="bg-gray-300 p-4 rounded-lg flex-1 skeleton h-12"></button>
+            </div>
+        `;
+        showScreen('quoteScreen');
+    }
+
+    // Função para exibir o orçamento em tela, com base em um objeto de orçamento
+    function displayQuote(quoteData) {
+        // Renderiza o conteúdo real do orçamento
+        const htmlContent = `
+            <button id="backToFormBtn" class="mb-6 text-text-secondary hover:text-text-primary transition-colors duration-300">
+                <i class="fas fa-arrow-left mr-2"></i> Voltar
+            </button>
+            <h2 class="text-3xl font-bold mb-2">Orçamento Gerado</h2>
+            <p class="text-lg text-text-secondary mb-8">Confira os detalhes do seu novo orçamento.</p>
+
+            <div class="flex justify-between items-center pb-4 border-b border-border-color mb-6">
+                <h3 class="text-xl font-semibold text-text-primary">Detalhes do Serviço</h3>
+                <div class="text-sm text-text-secondary">
+                    <span id="quoteCompany">${quoteData.companyName || 'N/A'}</span>
+                </div>
+            </div>
+            
+            <p id="quoteDescription" class="text-lg text-text-primary leading-relaxed mb-8">${quoteData.description || 'Nenhuma descrição fornecida.'}</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="quote-info-card">
+                    <h4 class="text-sm text-text-secondary font-semibold mb-2">Valor Estimado</h4>
+                    <div id="quoteValue" class="text-3xl font-bold text-accent-purple">${quoteData.value || 'N/A'}</div>
+                </div>
+                <div class="quote-info-card">
+                    <h4 class="text-sm text-text-secondary font-semibold mb-2">Prazo de Entrega</h4>
+                    <div id="quoteDeadline" class="text-3xl font-bold text-accent-purple">${quoteData.deadline || 'N/A'}</div>
+                </div>
+            </div>
+            
+            <div class="quote-info-card mb-8">
+                <h4 class="text-sm text-text-secondary font-semibold mb-2">Observações Adicionais</h4>
+                <p id="quoteObservations" class="text-text-primary">${quoteData.observations || 'Nenhuma observação adicional.'}</p>
+            </div>
+            
+            <div class="flex flex-col md:flex-row gap-4">
+                <button id="exportPdfBtn" class="btn-primary flex-1 hover:opacity-90">
+                    <i class="fas fa-file-pdf mr-2"></i> Exportar para PDF
+                </button>
+                <button id="viewHistoryBtn" class="bg-gray-300 text-gray-800 p-4 rounded-lg flex-1 hover:bg-gray-400 transition-colors">
+                    <i class="fas fa-history mr-2"></i> Ver Histórico
+                </button>
+            </div>
+        `;
+        quoteContent.innerHTML = htmlContent;
+
+        // Adiciona o listener de evento para o botão de voltar após a renderização
+        document.getElementById('backToFormBtn').addEventListener('click', () => {
+            showScreen('formScreen');
+            quoteForm.reset();
+        });
+
+        // Adiciona o listener de evento para o botão de histórico após a renderização
+        document.getElementById('viewHistoryBtn').addEventListener('click', () => {
+            fetchHistoryAndRender();
+            showScreen('historyScreen');
+        });
+
+        // Adiciona o listener de evento para o botão de exportar PDF após a renderização
+        document.getElementById('exportPdfBtn').addEventListener('click', () => {
+             // Checa se a biblioteca jsPDF foi carregada
+            if (typeof window.jspdf === 'undefined') {
+                // Tenta recarregar a tela ou mostra uma mensagem de erro
+                showHistoryMessage('Biblioteca de PDF não carregada. Tente novamente em alguns segundos.', 'error');
+                return;
+            }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            const company = quoteData.companyName || '';
+            const description = quoteData.description || '';
+            const value = quoteData.value || '';
+            const deadline = quoteData.deadline || '';
+            const observations = quoteData.observations || '';
+            
+            // Define a posição inicial do texto
+            let y = 20;
+
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(22);
+            doc.text(`Orçamento para ${company}`, 20, y);
+            y += 20;
+
+            doc.setFont('Helvetica', 'normal');
+            doc.setFontSize(14);
+            doc.text('Descrição do Serviço:', 20, y);
+            y += 10;
+            
+            doc.setFontSize(12);
+            const splitDescription = doc.splitTextToSize(description, 170);
+            doc.text(splitDescription, 20, y);
+            y += splitDescription.length * 5 + 10; // Adiciona um espaço dinâmico com base no número de linhas
+
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(14);
+            doc.text('Valor Estimado:', 20, y);
+            y += 10;
+            doc.setFont('Helvetica', 'normal');
+            doc.text(value, 20, y);
+            y += 20;
+
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(14);
+            doc.text('Prazo de Entrega:', 20, y);
+            y += 10;
+            doc.setFont('Helvetica', 'normal');
+            doc.text(deadline, 20, y);
+            y += 20;
+
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(14);
+            doc.text('Observações:', 20, y);
+            y += 10;
+            doc.setFont('Helvetica', 'normal');
+            const splitObservations = doc.splitTextToSize(observations, 170);
+            doc.text(splitObservations, 20, y);
+            
+            doc.save(`Orcamento_${company}.pdf`);
+        });
+    }
+
+    // Função para pré-processar o JSON para corrigir caracteres inválidos
+    function sanitizeJsonString(jsonString) {
+        // Substitui quebras de linha e outros caracteres de controle inválidos
+        let sanitized = jsonString.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+        // Remove vírgulas finais (trailing commas) que podem causar SyntaxError.
+        sanitized = sanitized.replace(/,\s*([\]}])/g, '$1');
+        return sanitized;
+    }
+
+    // Função que busca e renderiza o orçamento após o formulário ser enviado
+    async function fetchQuoteAndDisplay() {
+        showQuoteSkeleton();
+        try {
+            // Atraso de 15 segundos para dar tempo do webhook processar
+            await new Promise(resolve => setTimeout(resolve, 20000));
+            
+            const response = await fetch(WEBHOOK_URL_GET, { method: 'GET' });
+            if (!response.ok) {
+                throw new Error('Erro na resposta do servidor.');
+            }
+            const rawText = await response.text();
+            const sanitizedText = sanitizeJsonString(rawText);
+            const quoteData = JSON.parse(sanitizedText);
+            displayQuote(quoteData);
+        } catch (error) {
+            console.error('Erro ao buscar o orçamento:', error);
+            quoteContent.innerHTML = `<p class="text-center text-red-500">Não foi possível carregar o orçamento. Por favor, tente novamente mais tarde.</p>`;
+        }
+    }
+
+    // Manipulador de envio do formulário
+    quoteForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideErrorMessage();
+        showLoading();
+
+        const formData = new FormData(quoteForm);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch(WEBHOOK_URL_POST, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                throw new Error('Erro ao processar sua solicitação.');
+            }
+
+            // Se o POST for bem-sucedido, redireciona para a tela de orçamento com o GET do webhook
+            fetchQuoteAndDisplay();
+
+        } catch (error) {
+            console.error('Erro ao gerar orçamento:', error);
+            showErrorMessage('Ocorreu um erro ao gerar o orçamento. Verifique se o seu webhook está retornando um JSON válido e tente novamente.');
+        } finally {
+            hideLoading();
+        }
+    });
+    
+    // Manipuladores de clique para navegação
+    linkForm.addEventListener('click', (e) => {
+        e.preventDefault();
+        showScreen('formScreen');
+        quoteForm.reset();
+    });
+
+    linkHistory.addEventListener('click', (e) => {
+        e.preventDefault();
+        fetchHistoryAndRender();
+        showScreen('historyScreen');
+    });
+
+    // Listeners de eventos para a barra lateral no celular
+    menuToggleBtn.addEventListener('click', openSidebar);
+    closeSidebarBtn.addEventListener('click', closeSidebar);
+    sidebarOverlay.addEventListener('click', closeSidebar);
+
+    // Função para buscar o único dado histórico do Make.com e renderizá-lo
+    async function fetchHistoryAndRender() {
+        historyList.innerHTML = '';
+        historyLoading.classList.remove('hidden');
+
+        try {
+            const response = await fetch(WEBHOOK_URL_GET, { method: 'GET' });
+            if (!response.ok) {
+                throw new Error('Erro na resposta do servidor.');
+            }
+
+            const rawText = await response.text();
+            const sanitizedText = sanitizeJsonString(rawText);
+            console.log(rawText)
+            console.log(sanitizedText)
+            const historyData = JSON.parse(sanitizedText);
+            
+            // Renderiza o único orçamento retornado pelo webhook
+            const companyName = historyData.companyName || 'Empresa não informada';
+            const productService = historyData.productService || 'Serviço não informado';
+            const timestamp = historyData.timestamp ? new Date(historyData.timestamp).toLocaleDateString('pt-BR') : 'Data não informada';
+
+            const item = document.createElement('div');
+            item.className = 'history-card flex flex-col sm:flex-row justify-between items-center';
+            item.innerHTML = `
+                <div>
+                    <p class="font-bold text-lg">${companyName}</p>
+                    <p class="text-text-secondary">${productService}</p>
+                </div>
+                <div class="mt-2 sm:mt-0 sm:text-right">
+                    <p class="text-sm text-text-secondary">${timestamp}</p>
+                </div>
+            `;
+            
+            // Adicionado: Adiciona o listener de clique para a visualização do histórico
+            item.addEventListener('click', () => {
+                displayQuote(historyData);
+                showScreen('quoteScreen'); // Adicionado: Muda para a tela de orçamento
+            });
+            
+            historyList.appendChild(item);
+        
+        } catch (error) {
+            console.error('Erro ao buscar histórico:', error);
+            historyList.innerHTML = `<p class="text-center text-red-500">Não foi possível carregar o histórico. Por favor, tente novamente mais tarde.</p>`;
+        } finally {
+            historyLoading.classList.add('hidden');
+        }
+    }
+
+    // Função para mostrar uma mensagem na tela de histórico
+    function showHistoryMessage(message, type) {
+        historyMessageBox.textContent = message;
+        historyMessageBox.classList.remove('hidden');
+        if (type === 'success') {
+            historyMessageBox.classList.add('bg-green-100', 'text-green-700');
+            historyMessageBox.classList.remove('bg-red-100', 'text-red-700');
+        } else if (type === 'error') {
+            historyMessageBox.classList.add('bg-red-100', 'text-red-700');
+            historyMessageBox.classList.remove('bg-green-100', 'text-red-700');
+        }
+    }
+
+    // Funcionalidade de alternância de tema
+    function toggleTheme() {
+        const body = document.body;
+        body.classList.toggle('dark-theme');
+        const isDark = body.classList.contains('dark-theme');
+        const icon = isDark ? 'fa-sun' : 'fa-moon';
+        const oldIcon = isDark ? 'fa-moon' : 'fa-sun';
+        
+        // Alterna os ícones para os botões do desktop e celular
+        document.querySelectorAll('.theme-icon').forEach(i => {
+            i.classList.remove(oldIcon);
+            i.classList.add(icon);
+        });
+    }
+
+    // Adiciona event listeners para ambos os botões de alternância de tema
+    document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
+    document.getElementById('themeToggleBtnDesktop').addEventListener('click', toggleTheme);
+    
+
+    // Inicializa com o tema claro por padrão, e verifica se o usuário prefere o modo escuro
+    const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (isDarkMode) {
+        document.body.classList.add('dark-theme');
+        document.querySelectorAll('.theme-icon').forEach(i => {
+            i.classList.remove('fa-moon');
+            i.classList.add('fa-sun');
+        });
+    }
+</script>
+</body>
+</html>
